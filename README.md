@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CoralFrame
 
-## Getting Started
+A visual, no-code builder for backend workflows and AI automations — wire triggers, transforms, AI steps, and actions together on a canvas and ship it. Think n8n, built with a distinctive ruby-on-charcoal identity.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router, Cache Components, Partial Prerendering) + **React 19**
+- **TypeScript** (strict), **Tailwind CSS v4**, shadcn/base-ui primitives
+- **XYFlow** (`@xyflow/react`) for the canvas
+- **Prisma 7** + **Neon** (pooled `DATABASE_URL` for the app, direct `DIRECT_URL` for migrations)
+- **better-auth** for email/password + OAuth (GitHub, Google) with signed cookie sessions
+
+## Getting started
+
+Requires Node.js 20+ and pnpm.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+cp .env.example .env   # fill in DATABASE_URL, DIRECT_URL, BETTER_AUTH_SECRET
+pnpm prisma migrate dev
+pnpm dev               # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+OAuth providers (GitHub / Google) are optional — the app signs in with email/password by default.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | Purpose |
+| --- | --- |
+| `pnpm dev` | Dev server (Turbopack) |
+| `pnpm build` / `pnpm start` | Production build / serve |
+| `pnpm lint` | ESLint |
+| `pnpm prisma migrate dev` | Apply/create migrations |
 
-## Learn More
+## Project structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/
+  (auth)/            sign-in / sign-up flows
+  (root)/            dashboard + workflow editor routes
+  api/auth/          better-auth handler
+  modules/
+    auth/            auth actions, user button, sign-in form
+    canvas/          XYFlow canvas — builder, palette, inspector, autosave, edges, nodes
+    nodes/           node registry (types, accents, brand glyphs) + icon tiles
+    workflows/       dashboard: list, rows, stats, new/rename, top navigation
+components/          shared UI primitives (button, dialog, switch, avatar, …)
+lib/                 prisma client, auth config, utils
+prisma/              schema + migrations
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Notes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- The canvas autosaves (1.5 s debounce) — the navbar pill reflects `saving → saved`.
+- Workflow graphs are persisted as JSON on the `Workflow` model; palette is collapsible, steps draggable/clickable.
+- `.env` is never committed; see `.env.example`. AI coding-agent tooling lives outside the repo (gitignored).

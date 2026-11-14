@@ -1,26 +1,396 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-heading);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+  /* Strong UI response curve - faster attack than the built-in ease-out */
+  --ease-emphasized: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Design-system tokens for brand gradient + dark-mode-adapted coral */
+:root {
+  /* Limestone deep-ruby -> coral gradient stops for primary actions */
+  --gp-from: oklch(0.63 0.225 19);
+  --gp-to: oklch(0.55 0.228 18.2);
+  --gp-from-hover: oklch(0.60 0.225 19);
+  --gp-to-hover: oklch(0.52 0.235 18.2);
+  --tile-raised-light: inset 0 1px 0 0 rgb(255 255 255 / 0.6), 0 1px 2px rgb(0 0 0 / 0.06), 0 0 0 1px rgb(0 0 0 / 0.03);
+}
+
+:root {
+  /* CoralFrame Light Theme */
+  --background: oklch(0.995 0.002 260);
+  --foreground: oklch(0.14 0.01 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.14 0.01 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.14 0.01 260);
+  
+  /* CoralFrame Signature Ruby/Crimson (#E0234E) */
+  --primary: oklch(0.556 0.228 18.2);
+  --primary-foreground: oklch(1 0 0);
+
+  --secondary: oklch(0.962 0.006 260);
+  --secondary-foreground: oklch(0.18 0.01 260);
+  
+  --muted: oklch(0.965 0.005 260);
+  --muted-foreground: oklch(0.50 0.02 260);
+  
+  /* Delicate coral-tinted accent */
+  --accent: oklch(0.965 0.025 18.2);
+  --accent-foreground: oklch(0.50 0.22 18.2);
+  
+  --destructive: oklch(0.57 0.23 25);
+  --border: oklch(0.91 0.006 260);
+  --input: oklch(0.91 0.006 260);
+  --ring: oklch(0.556 0.228 18.2);
+  
+  /* CoralFrame Chart Colors */
+  --chart-1: oklch(0.556 0.228 18.2);
+  --chart-2: oklch(0.64 0.20 25);
+  --chart-3: oklch(0.48 0.18 14);
+  --chart-4: oklch(0.72 0.16 45);
+  --chart-5: oklch(0.52 0.18 280);
+  
+  --radius: 0.625rem;
+  
+  /* CoralFrame Sidebar */
+  --sidebar: oklch(0.985 0.003 260);
+  --sidebar-foreground: oklch(0.14 0.01 260);
+  --sidebar-primary: oklch(0.556 0.228 18.2);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.965 0.025 18.2);
+  --sidebar-accent-foreground: oklch(0.50 0.22 18.2);
+  --sidebar-border: oklch(0.91 0.006 260);
+  --sidebar-ring: oklch(0.556 0.228 18.2);
+}
+
+.dark {
+  /* Less saturated, slightly lighter coral for dark mode (not the light-mode ruby) */
+  --gp-from: oklch(0.72 0.185 16);
+  --gp-to: oklch(0.60 0.215 15);
+  --gp-from-hover: oklch(0.76 0.165 16);
+  --gp-to-hover: oklch(0.63 0.205 15);
+  --tile-raised-dark: inset 0 1px 0 0 rgb(255 255 255 / 0.05), 0 1px 2px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(255 255 255 / 0.04);
+
+  /* CoralFrame Tech Dark Theme (#0C0E14 background) */
+  --background: oklch(0.125 0.008 260);
+  --foreground: oklch(0.985 0.002 260);
+  --card: oklch(0.165 0.012 260);
+  --card-foreground: oklch(0.985 0.002 260);
+  --popover: oklch(0.165 0.012 260);
+  --popover-foreground: oklch(0.985 0.002 260);
+  
+  /* CoralFrame Vibrant Ruby in Dark Mode (#EA2845) */
+  --primary: oklch(0.67 0.205 16);
+  --primary-foreground: oklch(1 0 0);
+
+  --secondary: oklch(0.22 0.012 260);
+  --secondary-foreground: oklch(0.985 0.002 260);
+  
+  --muted: oklch(0.20 0.012 260);
+  --muted-foreground: oklch(0.68 0.018 260);
+  
+  /* Subtle dark coral accent */
+  --accent: oklch(0.22 0.045 18.5);
+  --accent-foreground: oklch(0.95 0.02 18.5);
+  
+  --destructive: oklch(0.65 0.22 25);
+  --border: oklch(0.25 0.012 260);
+  --input: oklch(0.25 0.012 260);
+  --ring: oklch(0.67 0.205 16);
+  
+  /* Dark Chart Colors */
+  --chart-1: oklch(0.67 0.205 16);
+  --chart-2: oklch(0.68 0.20 28);
+  --chart-3: oklch(0.52 0.20 16);
+  --chart-4: oklch(0.76 0.16 48);
+  --chart-5: oklch(0.60 0.18 280);
+  
+  /* Dark Sidebar */
+  --sidebar: oklch(0.11 0.008 260);
+  --sidebar-foreground: oklch(0.985 0.002 260);
+  --sidebar-primary: oklch(0.67 0.205 16);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.18 0.015 260);
+  --sidebar-accent-foreground: oklch(0.985 0.002 260);
+  --sidebar-border: oklch(0.22 0.012 260);
+  --sidebar-ring: oklch(0.60 0.24 20.5);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Aurora - blurred coral gradient blobs rising from the bottom of the auth
+   surface. Layered radial gradients, transform-only motion, faded opacity.
+   ----------------------------------------------------------------------- */
+
+:root {
+  --aurora-a: rgba(255, 78, 107, 0.52);
+  --aurora-b: rgba(224, 35, 78, 0.46);
+  --aurora-c: rgba(255, 140, 166, 0.58);
+}
+
+.dark {
+  --aurora-a: rgba(255, 78, 107, 0.85);
+  --aurora-b: rgba(224, 35, 78, 0.85);
+  --aurora-c: rgba(255, 110, 130, 0.7);
+}
+
+.aurora-blob {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  will-change: transform;
+  animation-duration: 24s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+/* Wide riser - anchors the horizon line, spans edge to edge */
+.aurora-blob--a {
+  width: 120%;
+  left: -10%;
+  bottom: -13vh;
+  height: 62vh;
+  background: radial-gradient(ellipse at 50% 60%, var(--aurora-a) 0%, transparent 68%);
+  filter: blur(40px);
+  animation-name: aurora-a;
+  animation-duration: 26s;
+}
+
+/* Left ember - ruby core drifting up and right */
+.aurora-blob--b {
+  width: 34vw;
+  min-width: 320px;
+  aspect-ratio: 1;
+  left: -4%;
+  bottom: -14vh;
+  background: radial-gradient(circle at 45% 55%, var(--aurora-b) 0%, transparent 65%);
+  filter: blur(70px);
+  animation-name: aurora-b;
+  animation-duration: 19s;
+}
+
+/* Right ember - soft coral drifting up and left */
+.aurora-blob--c {
+  width: 38vw;
+  min-width: 340px;
+  aspect-ratio: 1;
+  right: -6%;
+  bottom: -18vh;
+  background: radial-gradient(circle at 55% 55%, var(--aurora-c) 0%, transparent 65%);
+  filter: blur(64px);
+  animation-name: aurora-c;
+  animation-duration: 29s;
+  animation-delay: -8s;
+}
+
+@keyframes aurora-a {
+  from {
+    transform: translate3d(0, 12vh, 0) scale(1);
+    opacity: 0.85;
+  }
+  to {
+    transform: translate3d(0, -10vh, 0) scale(1.1);
+    opacity: 1;
+  }
+}
+
+@keyframes aurora-b {
+  from {
+    transform: translate3d(-5vw, 9vh, 0) scale(0.92);
+  }
+  to {
+    transform: translate3d(8vw, -15vh, 0) scale(1.12);
+  }
+}
+
+@keyframes aurora-c {
+  from {
+    transform: translate3d(6vw, 10vh, 0) scale(0.95);
+  }
+  to {
+    transform: translate3d(-9vw, -13vh, 0) scale(1.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-blob {
+    animation: none !important;
+  }
+}
+
+
+/* Raised tile - one quiet neumorphic surface for empty states / hero marks */
+.tile-raised {
+  background: linear-gradient(180deg, var(--card) 0%, var(--muted) 100%);
+  border: 1px solid rgb(0 0 0 / 0.05);
+  box-shadow:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.7),
+    0 2px 6px rgb(0 0 0 / 0.07),
+    0 12px 32px -12px rgb(224 35 78 / 0.28);
+}
+.dark .tile-raised {
+  background: linear-gradient(180deg, var(--card) 0%, var(--muted) 100%);
+  border: 1px solid rgb(255 255 255 / 0.05);
+  box-shadow:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.06),
+    0 2px 8px rgb(0 0 0 / 0.45),
+    0 12px 36px -12px rgb(234 40 69 / 0.38);
+}
+
+/* Faint inner-highlight glass for small decorative chips on dark brand rails */
+.chip-glass {
+  background: rgb(255 255 255 / 0.055);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.12),
+    inset 0 -1px 0 rgb(0 0 0 / 0.3),
+    0 6px 16px -8px rgb(224 35 78 / 0.35);
+}
+/* --------------------------------------------------------------------------
+   Interaction floor - every clickable reads as clickable.
+   ----------------------------------------------------------------------- */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+[role="menuitem"]:not([data-disabled]),
+[role="tab"]:not(:disabled),
+[role="switch"]:not([data-disabled]),
+a[href],
+input[type="button"],
+input[type="submit"],
+label[for] {
+  cursor: pointer;
+}
+button:disabled,
+[aria-disabled="true"],
+[data-disabled],
+:disabled {
+  cursor: not-allowed;
+}
+
+/* --------------------------------------------------------------------------
+   Gloss sweep - a single band of light crosses the brand gradient on hover.
+   transform-only, one sweep per hover, restraint by design.
+   ----------------------------------------------------------------------- */
+.btn-gloss {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn-gloss::after {
+  content: "";
+  position: absolute;
+  inset: -20% -70%;
+  z-index: 1;
+  background: linear-gradient(
+    100deg,
+    transparent 18%,
+    rgb(255 255 255 / 0.25) 36%,
+    rgb(255 255 255 / 0.42) 46%,
+    rgb(255 255 255 / 0.25) 55%,
+    transparent 72%
+  );
+  transform: translateX(-130%) skewX(-16deg);
+  transition: transform 600ms cubic-bezier(0.23, 1, 0.32, 1);
+  pointer-events: none;
+}
+.btn-gloss:hover::after {
+  transform: translateX(130%) skewX(-16deg);
+}
+
+/* --------------------------------------------------------------------------
+   Stat cells - soft top-light faces, extruded numbers. The strip keeps its
+   hairline border; each face carries the neumorphic weight.
+   ----------------------------------------------------------------------- */
+.stat-cell {
+  background: linear-gradient(180deg, var(--card) 0%, var(--muted) 130%);
+  box-shadow:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.7),
+    inset 0 -1px 0 0 rgb(0 0 0 / 0.045);
+}
+.dark .stat-cell {
+  background: linear-gradient(180deg, var(--card) 0%, var(--muted) 130%);
+  box-shadow:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.06),
+    inset 0 -1px 0 0 rgb(0 0 0 / 0.35);
+}
+.stat-value {
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.5);
+}
+.dark .stat-value {
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.5);
+}
+
+/* Inputs - a touch of depth on hover, nothing more */
+@media (hover: hover) and (pointer: fine) {
+  .hover-raise:hover {
+    transform: translateY(-1px);
+  }
 }
