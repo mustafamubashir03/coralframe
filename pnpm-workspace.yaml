@@ -1,5 +1,6 @@
 allowBuilds:
   "@prisma/engines": false
+  inngest-cli: false
   prisma: false
   protobufjs: true
   sharp: false

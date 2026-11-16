@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Trash2 } from "lucide-react";
+import { Play, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
@@ -24,8 +24,53 @@ import { TopNav } from "./top-nav";
 import { RenameWorkflow } from "./rename-workflow";
 import { SaveIndicator } from "@modules/canvas/components/save-indicator";
 import { SaveStatusProvider } from "@modules/canvas/components/save-status-context";
+import { ExecutionOverlayProvider, useExecutionOverlay } from "@modules/canvas/components/execution-context";
 import { toggleActive, deleteWorkflow } from "@/app/modules/workflows/actions";
 import { cn } from "@/lib/utils";
+
+function WorkflowRunButton({ workflowId }: { workflowId: string }) {
+  const { startRun } = useExecutionOverlay();
+  const [isRunning, startTransition] = React.useTransition();
+  const [runError, setRunError] = React.useState<string | null>(null);
+
+  const handleRun = () => {
+    setRunError(null);
+    startTransition(async () => {
+      try {
+        await startRun(workflowId);
+      } catch (error) {
+        setRunError(error instanceof Error ? error.message : "Couldn't start the run.");
+      }
+    });
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={handleRun}
+        disabled={isRunning}
+        aria-label="Run workflow"
+        title="Run workflow now"
+        className="flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-primary focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {isRunning ? (
+          <Spinner className="size-4" aria-label="Starting run" />
+        ) : (
+          <Play className="size-4" strokeWidth={1.75} aria-hidden="true" />
+        )}
+      </button>
+      {runError && (
+        <p
+          role="alert"
+          className="absolute left-1/2 top-14 z-30 -translate-x-1/2 whitespace-nowrap rounded-md border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-[11px] leading-4 text-destructive shadow-sm"
+        >
+          {runError}
+        </p>
+      )}
+    </>
+  );
+}
 
 export function WorkflowEditor({
   workflow,
@@ -59,7 +104,8 @@ export function WorkflowEditor({
   };
 
   return (
-    <SaveStatusProvider>
+    <ExecutionOverlayProvider workflowId={workflow.id}>
+      <SaveStatusProvider>
       <div className="relative flex h-full min-h-0 flex-col">
         <TopNav
           breadcrumbs={[
@@ -71,6 +117,9 @@ export function WorkflowEditor({
               <SaveIndicator />
 
               <span className="mx-0.5 h-5 w-px bg-border" aria-hidden="true" />
+
+              {/* Run now */}
+              <WorkflowRunButton workflowId={workflow.id} />
 
               {/* Activation toggle */}
               <div className="flex items-center gap-2">
@@ -143,7 +192,7 @@ export function WorkflowEditor({
         />
 
         {toggleError && (
-          <p role="alert" className="absolute left-1/2 top-14 z-30 -translate-x-1/2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-[11px] leading-4 text-destructive shadow-sm">
+          <p role="alert" className="absolute left-1/2 top-14 z-30 -translate-x-1/2 whitespace-nowrap rounded-md border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-[11px] leading-4 text-destructive shadow-sm">
             {toggleError}
           </p>
         )}
@@ -158,6 +207,7 @@ export function WorkflowEditor({
           )}
         </main>
       </div>
-    </SaveStatusProvider>
+      </SaveStatusProvider>
+    </ExecutionOverlayProvider>
   );
 }

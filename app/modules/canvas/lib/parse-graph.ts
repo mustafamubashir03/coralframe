@@ -29,8 +29,12 @@ function isValidEdge(value: unknown): value is WorkflowEdge {
 
 export function parseNodes(input: unknown): WorkflowNode[] {
     if (!Array.isArray(input)) return [];
+    // Reconstruct canonical objects only — rows saved before autosave narrowed
+    // its diff may carry `selected`, `measured`, `zIndex` etc. Drop all of it.
     return input.filter(isValidNode).map((node) => ({
-        ...node,
+        id: node.id,
+        type: node.type,
+        position: { x: node.position.x, y: node.position.y },
         data: {
             label: typeof node.data?.label === "string" ? node.data.label : node.data?.nodeType ?? "Untitled",
             nodeType: node.data.nodeType,
@@ -47,7 +51,20 @@ export function parseNodes(input: unknown): WorkflowNode[] {
 
 export function parseEdges(input: unknown): WorkflowEdge[] {
     if (!Array.isArray(input)) return [];
-    return input.filter(isValidEdge).map((edge) => ({ ...edge, type: edge.type ?? "workflow" }));
+    return input.filter(isValidEdge).map((edge) => ({
+        id: edge.id,
+        source: edge.source,
+        target: edge.target,
+        sourceHandle: edge.sourceHandle,
+        targetHandle: edge.targetHandle,
+        type: edge.type ?? "workflow",
+        data: edge.data,
+    }));
+}
+
+/** Combined parse used by the execution engine for stored workflow graphs. */
+export function parseWorkflowGraph(nodesInput: unknown, edgesInput: unknown) {
+    return { nodes: parseNodes(nodesInput), edges: parseEdges(edgesInput) };
 }
 
 export function serializeNodes(nodes: WorkflowNode[]) {

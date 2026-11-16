@@ -1,0 +1,16 @@
+import { runWorkflow } from "../../engine/lib/run-workflow";
+import { inngest } from "../client";
+import { workflowTriggered } from "../events";
+
+export const executeWorkflow = inngest.createFunction({
+    id: "execute-workflow",
+    name: "Execute Workflow",
+    triggers: [workflowTriggered]
+},
+    async ({ event, step }) => {
+        const { executionId, workflowId } = event.data;
+        await step.run("run-workflow", async () => {
+            await runWorkflow(executionId)
+        });
+        return { ok: true, workflowId, executionId }
+    })

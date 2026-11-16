@@ -61,8 +61,8 @@ export function Canvas({ nodes, edges, onNodesChange, onEdgesChange, setNodes, s
     );
 
     return (
-        <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} onDrop={onDrop} onDragOver={onDragOver} onSelectionChange={handleSelectionChange} fitView fitViewOptions={{ padding: 0.45, maxZoom: 1 }} minZoom={0.3} maxZoom={1.75} deleteKeyCode="Backspace" colorMode={resolvedTheme === "dark" ? "dark" : "light"} className="h-full w-full bg-muted/20">
-            <Background gap={20} size={1} />
+        <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} onDrop={onDrop} onDragOver={onDragOver} onSelectionChange={handleSelectionChange} fitView fitViewOptions={{ padding: 0.45, maxZoom: 1 }} minZoom={0.3} maxZoom={1.75} deleteKeyCode="Backspace" colorMode={resolvedTheme === "dark" ? "dark" : "light"} className="h-full w-full bg-background">
+            <Background />
             <Controls showInteractive={false} className="rounded-xl! border! shadow-sm!" />
             <MiniMap
                 pannable

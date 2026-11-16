@@ -13,7 +13,7 @@ export function createWorkflowNode(
         data: {
             label: definition?.label ?? nodeType,
             nodeType,
-            config: nodeType === "ai" ? { provider: "openai" } : {},
+            config: nodeType === "ai" ? { provider: "openrouter" } : {},
             status: "idle",
         },
     };

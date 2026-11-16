@@ -4,10 +4,13 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { requireAuth } from "../../auth/actions"
+import { dispatchExecution } from "../lib/dispatch-execution"
+
+import { redactValue } from "@/lib/redact";
 
 export async function getWorkflows() {
     const user = await requireAuth()
-    return prisma.workflow.findMany({
+    const workflows = await prisma.workflow.findMany({
         where: { userId: user.id },
         orderBy: { updatedAt: 'desc' },
         include: {
@@ -18,12 +21,17 @@ export async function getWorkflows() {
             }
         }
     })
+    return workflows.map((workflow) => ({
+        ...workflow,
+        nodes: redactValue(workflow.nodes),
+        edges: redactValue(workflow.edges),
+    }))
 }
 
 
 export async function getWorkflow(id: string) {
     const user = await requireAuth()
-    return prisma.workflow.findFirst({
+    const workflow = await prisma.workflow.findFirst({
         where: { id, userId: user.id },
         include: {
             executions: {
@@ -33,6 +41,12 @@ export async function getWorkflow(id: string) {
             }
         }
     })
+    if (!workflow) return null
+    return {
+        ...workflow,
+        nodes: redactValue(workflow.nodes),
+        edges: redactValue(workflow.edges),
+    }
 }
 
 export async function createWorkflow(name = "Untitled workflow") {
@@ -125,4 +139,87 @@ export async function toggleActive(id: string, active: boolean) {
     } catch {
         return { ok: false, error: "Couldn't update workflow. Please try again." } as const
     }
+}
+
+
+export async function triggerWorkflow(workflowId: string) {
+    const user = await requireAuth()
+    const workflow = await prisma.workflow.findFirst({
+        where: { id: workflowId, userId: user.id }
+    })
+    if (!workflow) throw new Error("Workflow not found");
+
+    const result = await dispatchExecution(workflowId, "MANUAL")
+    revalidatePath('/')
+    if ("error" in result) {
+        throw new Error(result.error);
+    }
+    return result.executionId;
+}
+
+/** List the most recent executions, with workflow names, redacted. */
+export async function getExecutions(limit = 25) {
+    const user = await requireAuth()
+    const executions = await prisma.execution.findMany({
+        where: { workflow: { userId: user.id } },
+        orderBy: { startedAt: 'desc' },
+        take: limit,
+        select: {
+            id: true,
+            status: true,
+            trigger: true,
+            startedAt: true,
+            finishedAt: true,
+            retryOfId: true,
+            workflow: { select: { id: true, name: true } },
+        },
+    })
+    return executions
+}
+
+/** Load a single execution with per-step IO — redacted for display. */
+export async function getExecution(id: string) {
+    const user = await requireAuth()
+    const execution = await prisma.execution.findFirst({
+        where: { id, workflow: { userId: user.id } },
+        include: {
+            workflow: { select: { id: true, name: true } },
+            steps: { orderBy: { startedAt: 'asc' } },
+            retries: { orderBy: { startedAt: 'desc' }, select: { id: true, status: true, startedAt: true } },
+        },
+    })
+    if (!execution) return null
+    return {
+        ...execution,
+        data: redactValue(execution.data),
+        steps: execution.steps.map((step) => ({
+            ...step,
+            input: redactValue(step.input ?? {}),
+            output: redactValue(step.output ?? {}),
+            error: redactValue(step.error ?? ""),
+        })),
+        retryOfId: execution.retryOfId,
+        retries: execution.retries,
+    }
+}
+
+/**
+ * Re-run the original execution — a fresh attempt under Inngest, linked to
+ * the original row. Whole-graph replay: all steps re-execute.
+ */
+export async function retryExecution(id: string) {
+    const user = await requireAuth()
+    const execution = await prisma.execution.findFirst({
+        where: { id, workflow: { userId: user.id } },
+    })
+    if (!execution) throw new Error("Execution not found")
+    const result = await dispatchExecution(
+        execution.workflowId,
+        execution.trigger,
+        (execution.data as Record<string, unknown> | null) ?? undefined,
+        execution.id,
+    )
+    revalidatePath('/')
+    if ("error" in result) throw new Error(result.error);
+    redirect(`/executions/${result.executionId}`)
 }

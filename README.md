@@ -49,6 +49,14 @@ lib/                 prisma client, auth config, utils
 prisma/              schema + migrations
 ```
 
+## Security & credentials
+
+- **Workflows and their node configs are persisted as JSON.** API keys, bot tokens, integration secrets, webhook secrets and OAuth secrets are treated as sensitive material: retrieval paths redact them before they reach the browser, and webhook ingestion strips secret-looking headers before storing payloads.
+- **Workspace credentials are stored encrypted** (AES-256-GCM) in the `credential` table and referenced from nodes by id (`credentialId`). Decryption happens only server-side, inside executors, at execution time — raw secrets never travel to the frontend.
+- Set `CREDENTIALS_ENCRYPTION_KEY` (32 bytes, `openssl rand -hex 32`) before storing or resolving credentials. It is intentionally not in this repo.
+- **Webhook endpoints** require an optional per-node secret (`x-webhook-secret` for generic webhooks, `X-Hub-Signature-256` for GitHub, `x-telegram-bot-api-secret-token` for Telegram). They enforce payload size limits, per-workflow rate limits, method checks and timing-safe signature comparison.
+- **Migration strategy for node configs storing raw secrets:** create workspace credentials via the Executors UI (or the credential actions), then replace the inline secret fields in node config with `credentialId` references. Raw secrets remain executable for backward compatibility, but should be rotated once migrated.
+
 ## Notes
 
 - The canvas autosaves (1.5 s debounce) — the navbar pill reflects `saving → saved`.

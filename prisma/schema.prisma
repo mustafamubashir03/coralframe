@@ -18,6 +18,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   workflows     Workflow[]
+  credentials   Credential[]
 
   @@map("user")
 }
@@ -102,18 +103,36 @@ model Workflow {
 }
 
 model Execution {
-  id         String          @id @default(cuid())
-  workflowId String
-  workflow   Workflow        @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-  status     ExecutionStatus @default(RUNNING)
-  trigger    TriggerType
-  data       Json?
-  steps      ExecutionStep[]
-  startedAt  DateTime        @default(now())
-  finishedAt DateTime?
+  id            String          @id @default(cuid())
+  workflowId    String
+  workflow      Workflow        @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  status        ExecutionStatus @default(RUNNING)
+  trigger       TriggerType
+  data          Json?
+  steps         ExecutionStep[]
+  startedAt     DateTime        @default(now())
+  finishedAt    DateTime?
+  retryOfId     String?
+  retryOf       Execution?      @relation("Retry", fields: [retryOfId], references: [id])
+  retries       Execution[]     @relation("Retry")
 
   @@index([workflowId])
   @@index([workflowId, startedAt(sort: Desc)])
+}
+
+model Credential {
+  id            String   @id @default(cuid())
+  name          String
+  provider      String
+  /** AES-256-GCM ciphertext: 12-byte IV || 16-byte tag || ciphertext (single blob). */
+  encryptedData Bytes
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@map("credential")
 }
 
 model ExecutionStep {

@@ -5,6 +5,8 @@ import { NewWorkflowButton } from "@/app/modules/workflows/components/new-workfl
 import { WorkflowList } from "@/app/modules/workflows/components/workflow-list";
 import { StatValue } from "@/app/modules/workflows/components/stat-value";
 import { TopNav } from "@/app/modules/workflows/components/top-nav";
+import { DashboardRail } from "@/app/modules/workflows/components/dashboard-rail";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 export default async function Home() {
@@ -36,8 +38,10 @@ export default async function Home() {
   return (
     <>
       <TopNav breadcrumbs={[{ label: "Workflows" }]} />
-      <main id="main-content" className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <div className="flex min-h-0 flex-1">
+        <DashboardRail />
+        <main id="main-content" className="min-h-0 min-w-0 flex-1 overflow-y-auto">
+          <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
           {/* Page head */}
           <section className="flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -50,7 +54,9 @@ export default async function Home() {
                   : "Build, activate and monitor your automations here."}
               </p>
             </div>
-            {hasWorkflows && <NewWorkflowButton />}
+            <div className="flex shrink-0 items-center gap-2">
+              {hasWorkflows && <NewWorkflowButton />}
+            </div>
           </section>
 
           {/* Stats strip — live numbers from your workspace */}
@@ -74,12 +80,33 @@ export default async function Home() {
             ))}
           </section>
 
+          {!hasWorkflows && (
+            <section aria-label="Getting started" className="mt-8 rounded-xl border border-primary/25 bg-gradient-to-r from-primary/[0.06] to-transparent p-5">
+              <p className="text-[13px] font-semibold text-foreground">Ship your first workflow in minutes</p>
+              <ol className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-6">
+                <li className="flex min-w-0 items-start gap-2.5">
+                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-primary/40 text-[10px] font-bold text-primary">1</span>
+                  <span className="text-[12px] leading-5 text-muted-foreground"><Link href="/credentials" className="font-medium text-primary underline underline-offset-2 hover:text-primary/80">Connect an integration</Link> — add one token or API key</span>
+                </li>
+                <li className="flex min-w-0 items-start gap-2.5">
+                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-primary/40 text-[10px] font-bold text-primary">2</span>
+                  <span className="text-[12px] leading-5 text-muted-foreground"><Link href="/templates" className="font-medium text-primary underline underline-offset-2 hover:text-primary/80">Pick a template</Link> — pre-wired graphs with your credentials detected</span>
+                </li>
+                <li className="flex min-w-0 items-start gap-2.5">
+                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-primary/40 text-[10px] font-bold text-primary">3</span>
+                  <span className="text-[12px] leading-5 text-muted-foreground">Press <kbd className="rounded border border-border bg-muted px-1 py-0.5 text-[10px] font-mono text-foreground">Run now</kbd> on the canvas and watch steps light up</span>
+                </li>
+              </ol>
+            </section>
+          )}
+
           {/* Workflows */}
           <section aria-label="Your workflows" className="mt-6">
             <WorkflowList workflows={workflows} />
           </section>
-        </div>
-      </main>
+          </div>
+        </main>
+      </div>
     </>
   );
 }

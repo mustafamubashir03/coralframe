@@ -2,8 +2,18 @@
 
 import { useEffect, useRef } from "react";
 import { saveWorkflowGraph } from "@/app/modules/workflows/actions";
+import {
+    serializeEdges,
+    serializeNodes,
+} from "@/app/modules/canvas/lib/parse-graph";
+import type { WorkflowEdge, WorkflowNode } from "@/app/modules/canvas/lib/types";
 import type { SaveStatus } from "@modules/canvas/components/save-status-context";
 
+/**
+ * Autosaves only when the *persisted* graph changes. XYFlow toggles `selected`,
+ * `dragging`, `measured`, `zIndex` on node/edge objects during plain interaction —
+ * none of those are part of the stored graph, so clicking around never writes.
+ */
 export function useAutosave({
     nodes,
     edges,
@@ -12,8 +22,8 @@ export function useAutosave({
     delay = 1500,
     onStatusChange,
 }: {
-    nodes: unknown[];
-    edges: unknown[];
+    nodes: WorkflowNode[];
+    edges: WorkflowEdge[];
     workflowId: string;
     enabled: boolean;
     delay?: number;
@@ -25,8 +35,11 @@ export function useAutosave({
 
     useEffect(() => {
         if (!enabled) return;
-        const next = JSON.stringify(nodes);
-        const nextEdges = JSON.stringify(edges);
+        // Canonical comparison target = exactly what gets persisted.
+        const canonicalNodes = serializeNodes(nodes);
+        const canonicalEdges = serializeEdges(edges);
+        const next = JSON.stringify(canonicalNodes);
+        const nextEdges = JSON.stringify(canonicalEdges);
         // First run establishes the baseline — the server already has this graph.
         if (serialized.current === "") {
             serialized.current = next;
@@ -41,7 +54,10 @@ export function useAutosave({
 
         onStatusChange("saving");
         timeoutRef.current = setTimeout(async () => {
-            const result = await saveWorkflowGraph(workflowId, { nodes, edges });
+            const result = await saveWorkflowGraph(workflowId, {
+                nodes: canonicalNodes,
+                edges: canonicalEdges,
+            });
             onStatusChange(result.ok ? "saved" : "error");
         }, delay);
 

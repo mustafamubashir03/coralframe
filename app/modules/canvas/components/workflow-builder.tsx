@@ -6,7 +6,9 @@ import { Canvas } from "./canvas";
 import { CanvasEmptyState } from "./canvas-empty-state";
 import { NodePalette } from "./node-palette";
 import { NodeConfigPanel } from "./node-config-panel";
+import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { useSaveStatus } from "./save-status-context";
+import { useExecutionOverlay } from "./execution-context";
 import { parseNodes, parseEdges } from "../../canvas/lib/parse-graph";
 import { createWorkflowNode } from "../../canvas/lib/create-node";
 import { useAutosave } from "../../canvas/hooks/use-autosave";
@@ -55,6 +57,21 @@ function WorkflowBuilderInner({
         getPaletteCollapsedServerSnapshot
     );
     const { setStatus } = useSaveStatus();
+    const { overlay, executionId, runState } = useExecutionOverlay();
+    const doneCount = Object.values(overlay).filter((s) => s.status === "success").length;
+    // Terminal chips dismiss themselves after 5s; a fresh run re-arms them — without
+    // setState-in-effect (render-time adjustment instead).
+    const [terminalDismissed, setTerminalDismissed] = useState(false);
+    const [prevExecutionId, setPrevExecutionId] = useState(executionId);
+    if (prevExecutionId !== executionId) {
+        setPrevExecutionId(executionId);
+        setTerminalDismissed(false);
+    }
+    useEffect(() => {
+        if (runState !== "success" && runState !== "error") return;
+        const t = window.setTimeout(() => setTerminalDismissed(true), 5000);
+        return () => window.clearTimeout(t);
+    }, [runState]);
 
     const { fitView, screenToFlowPosition } = useReactFlow<WorkflowNode>();
 
@@ -168,6 +185,37 @@ function WorkflowBuilderInner({
                     setEdges={setEdges}
                     onSelectionChange={setSelectedNodeId}
                 />
+
+                {runState === "running" && (
+                    <div
+                        role="status"
+                        aria-live="polite"
+                        className="absolute right-3 top-3 z-10 flex items-center gap-2 rounded-full border border-amber-500/30 bg-card/90 py-1.5 pl-2.5 pr-3 text-[11px] font-medium text-amber-700 shadow-sm backdrop-blur-sm dark:text-amber-400"
+                    >
+                        <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                        Executing…
+                        <span className="tabular-nums text-amber-600/80 dark:text-amber-500/80">{doneCount} done</span>
+                    </div>
+                )}
+                {runState === "success" && !terminalDismissed && (
+                    <div
+                        role="status"
+                        aria-live="polite"
+                        className="absolute right-3 top-3 z-10 flex items-center gap-2 rounded-full border border-emerald-500/30 bg-card/90 py-1.5 pl-2.5 pr-3 text-[11px] font-medium text-emerald-700 shadow-sm backdrop-blur-sm dark:text-emerald-400"
+                    >
+                        <CheckCircle2 className="size-3.5" aria-hidden="true" />
+                        Run completed
+                    </div>
+                )}
+                {runState === "error" && !terminalDismissed && (
+                    <div
+                        role="alert"
+                        className="absolute right-3 top-3 z-10 flex items-center gap-2 rounded-full border border-destructive/30 bg-card/90 py-1.5 pl-2.5 pr-3 text-[11px] font-medium text-destructive shadow-sm backdrop-blur-sm"
+                    >
+                        <XCircle className="size-3.5" aria-hidden="true" />
+                        Run failed — see the red step
+                    </div>
+                )}
 
                 {nodes.length === 0 && <CanvasEmptyState onAddTrigger={addTrigger} />}
             </div>

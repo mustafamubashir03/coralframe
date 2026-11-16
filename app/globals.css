@@ -53,10 +53,10 @@
 /* Design-system tokens for brand gradient + dark-mode-adapted coral */
 :root {
   /* Limestone deep-ruby -> coral gradient stops for primary actions */
-  --gp-from: oklch(0.63 0.225 19);
-  --gp-to: oklch(0.55 0.228 18.2);
-  --gp-from-hover: oklch(0.60 0.225 19);
-  --gp-to-hover: oklch(0.52 0.235 18.2);
+  --gp-from: oklch(0.60 0.24 19);
+  --gp-to: oklch(0.47 0.245 18.2);
+  --gp-from-hover: oklch(0.56 0.24 19);
+  --gp-to-hover: oklch(0.43 0.245 18.2);
   --tile-raised-light: inset 0 1px 0 0 rgb(255 255 255 / 0.6), 0 1px 2px rgb(0 0 0 / 0.06), 0 0 0 1px rgb(0 0 0 / 0.03);
 }
 
@@ -392,5 +392,64 @@ button:disabled,
 @media (hover: hover) and (pointer: fine) {
   .hover-raise:hover {
     transform: translateY(-1px);
+  }
+}
+/* Node status transition - state indication only, never decoration.
+   Ease-out with a settled scale (no scale-0 pop-ins); reduced-motion disables it. */
+@keyframes cf-node-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.18);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.cf-node-pop {
+  animation: cf-node-pop 260ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cf-node-pop {
+    animation: none;
+  }
+}
+
+/* Edge dot flow — linear motion for a constant stream, only while a step is live */
+@keyframes cf-edge-flow {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+
+.cf-edge-flow {
+  animation: cf-edge-flow 0.9s linear infinite;
+}
+
+/* Live node breathing ring — slow, quiet, state indication only */
+@keyframes cf-live-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.22);
+  }
+}
+
+.cf-node-live {
+  animation: cf-live-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cf-edge-flow,
+  .cf-node-live {
+    animation: none;
   }
 }
